@@ -1,5 +1,9 @@
 # 神游 · 中国神仙与庙宇图鉴
 
+**在线访问：[神游图鉴](https://sparkyqin.github.io/shenyou-atlas/)**
+
+GitHub Pages 已启用。更新 `main` 分支中的网站文件后，GitHub Actions 会先检查页面和图片，再自动发布 `dist/`。也可在 Actions 页面手动运行发布工作流。
+
 面向旅行看庙的中文互动图鉴，以神明人物为中心，串联故事、职掌、神像辨认、相关神祇与供奉庙宇。
 
 ## 当前内容
