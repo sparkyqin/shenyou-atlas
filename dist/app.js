@@ -362,7 +362,7 @@
   function templeResults() {
     const keyword = normalize(templeQuery);
     const results = data.temples.filter(temple => {
-      const text = normalize([temple.name,temple.city,temple.summary,...temple.deities.flatMap(id => [deityMap.get(id)?.name,...(deityMap.get(id)?.aliases || [])])].join(' '));
+      const text = normalize([temple.name,...(temple.aliases || []),temple.city,temple.summary,...temple.deities.flatMap(id => [deityMap.get(id)?.name,...(deityMap.get(id)?.aliases || [])])].join(' '));
       return text.includes(keyword) && (templeRegion === '全部地区' || temple.region === templeRegion) && (templeType === '全部类型' || temple.type === templeType);
     });
     const halls = hallMatches(templeQuery);
@@ -375,11 +375,11 @@
     const regions = [...new Set(data.temples.map(temple => temple.region).filter(Boolean))];
     const types = [...new Set(data.temples.map(temple => temple.type).filter(Boolean))];
     main.innerHTML = `<div class="container">
-      <div class="page-intro"><div class="eyebrow">旅行看庙</div><h1>走到哪里，都多看懂一点。</h1><p>精选 ${data.temples.length} 处有资料依据的庙宇与圣地。也可以输入陌生庙宇的殿名，从主神与造像找线索。</p></div>
+      <div class="page-intro"><div class="eyebrow">旅行看庙</div><h1>走到哪里，都多看懂一点。</h1><p>目前收录 ${data.temples.length} 处庙宇与圣地，分布于 ${regions.length} 个地区。这是一份持续补充的精选导览，重要寺观仍有缺漏，各寺观的供奉也未全部收录。</p></div>
       <div class="search-input-wrap"><span class="search-symbol"></span><input id="temple-search" type="search" value="${esc(templeQuery)}" placeholder="输入庙名、城市、殿名或主神" aria-label="搜索庙宇与殿名"></div>
       <div class="temple-filters"><label>地区<select id="temple-region">${['全部地区',...regions].map(region => `<option ${region === templeRegion ? 'selected' : ''}>${esc(region)}</option>`).join('')}</select></label><label>类型<select id="temple-type">${['全部类型',...types].map(type => `<option ${type === templeType ? 'selected' : ''}>${esc(type)}</option>`).join('')}</select></label><a class="text-link" href="#halls">看不懂殿名？翻开殿堂手册</a></div>
       <div id="temple-results">${templeResults()}</div>
-      <details class="coverage-note"><summary>为什么这里没有收录所有庙宇？</summary><p>这份图鉴以认识神明为线索，精选不同地区、传统和主祀的代表性庙宇。民间庙宇、佛寺、道观与历史祠庙的范围各有差别，单靠一份名单很难覆盖地方供奉的全部面貌。</p><p>游览未收录的庙宇时，可以用殿名手册、神像特征和神明别名继续查找。所列导览依据公开资料，殿宇陈设与开放范围请结合当地说明。</p></details>
+      <details class="coverage-note"><summary>收录范围、地区数量与已知缺口</summary><p>本页已收录 ${data.temples.length} 处，分布于 ${regions.length} 个地区。${types.map(type => esc(type) + ' ' + data.temples.filter(t => t.type === type).length + ' 处').join('；')}。这只是当前条目的统计，不是全国覆盖率。</p><p>${esc(data.templeCoverage?.limitation || '')}</p><p>尚待核验并补充的典型例子：${esc((data.templeCoverage?.pendingExamples || []).join('、'))}。这份缺口清单也未穷尽。</p><p>同一座庙宇中的“已关联人物”只列已有资料关联的对象，不等于完整供奉清单。殿名手册与认像线索可帮助继续查找，不能替代地方题牌、碑记和寺观资料。</p></details>
       </div>`;
     const refresh = () => { document.querySelector('#temple-results').innerHTML = templeResults(); };
     document.querySelector('#temple-search').addEventListener('input', event => { templeQuery = event.target.value; refresh(); });
@@ -399,7 +399,7 @@
     const temple = templeMap.get(id);
     if (!temple) return renderMissing();
     const image = templeImage(temple);
-    main.innerHTML = `<div class="container">${breadcrumb([{href:'#temples',label:'旅行看庙'},{label:temple.name}])}<div class="temple-detail-hero">${image ? artImage(image, '', true) : '<div class="temple-fallback" style="height:100%"></div>'}<div class="temple-detail-title"><div class="eyebrow">${esc(temple.city)}</div><h1>${esc(temple.name)}</h1><p>循着殿堂与题牌，认识这里的神明。</p></div></div>${image ? imageCredit(image) : ''}<div class="temple-info-layout"><article><section class="detail-section"><h2>先读懂这座庙</h2><p>${esc(temple.summary)}</p></section><section class="detail-section"><h2>这里，会遇见谁？</h2><div class="deity-grid">${temple.deities.map(id => deityCard(deityMap.get(id))).join('')}</div></section>${temple.nuance ? `<div class="nuance-box"><h3>把地方供奉看仔细</h3><p>${esc(temple.nuance)}</p></div>` : ''}<section class="detail-section"><h2>资料与进一步阅读</h2>${sourceList(temple.sources)}</section></article><aside class="temple-sidebar"><h3>走进殿堂的观察顺序</h3><ul class="identify-list">${temple.tips.map(tip => `<li>${esc(tip)}</li>`).join('')}</ul><a class="button small" href="#identify">打开神像辨认手册</a><a class="button small" href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(temple.city + ' ' + temple.name)}" target="_blank" rel="noopener noreferrer">在地图上查看</a></aside></div></div>`;
+    main.innerHTML = `<div class="container">${breadcrumb([{href:'#temples',label:'旅行看庙'},{label:temple.name}])}<div class="temple-detail-hero">${image ? artImage(image, '', true) : '<div class="temple-fallback" style="height:100%"></div>'}<div class="temple-detail-title"><div class="eyebrow">${esc(temple.city)}</div><h1>${esc(temple.name)}</h1><p>${esc(temple.id === 'famen' ? '从舍利、地宫与碑刻，读懂一座寺院。' : '循着殿堂与题牌，认识这里的信仰。')}</p></div></div>${image ? imageCredit(image) : ''}<div class="temple-info-layout"><article><section class="detail-section"><h2>先读懂这座庙</h2><p>${esc(temple.summary)}</p></section>${temple.storyParagraphs ? `<section class="detail-section"><h2>${esc(temple.storyTitle)}</h2>${temple.storyParagraphs.map(p => `<p>${esc(p)}</p>`).join('')}</section>` : ''}<section class="detail-section"><h2>${esc(temple.deitySectionTitle || '已关联的神明与尊像')}</h2><p>${esc(temple.associationNote || '只列本图鉴已有资料关联的对象，不等于现场完整供奉清单。')}</p><div class="deity-grid">${temple.deities.map(id => deityCard(deityMap.get(id))).join('')}</div></section>${temple.nuance ? `<div class="nuance-box"><h3>把地方供奉看仔细</h3><p>${esc(temple.nuance)}</p></div>` : ''}<section class="detail-section"><h2>资料与进一步阅读</h2>${sourceList(temple.sources)}</section></article><aside class="temple-sidebar"><h3>走进殿堂的观察顺序</h3><ul class="identify-list">${temple.tips.map(tip => `<li>${esc(tip)}</li>`).join('')}</ul><a class="button small" href="#identify">打开神像辨认手册</a><a class="button small" href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(temple.city + ' ' + temple.name)}" target="_blank" rel="noopener noreferrer">在地图上查看</a></aside></div></div>`;
     document.title = `${temple.name} · 神游看庙指南`;
   }
 
